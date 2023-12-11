@@ -34,7 +34,7 @@
 
 scriptver="v3.2.68"
 script=Synology_HDD_db
-repo="007revad/Synology_HDD_db"
+# repo="loohawe/Synology_HDD_db"
 
 # Check BASH variable is bash
 if [ ! "$(basename "$BASH")" = bash ]; then
@@ -80,7 +80,7 @@ scriptversion(){
     cat <<EOF
 $script $scriptver - by 007revad
 
-See https://github.com/$repo
+See https://github.com/$github_repo
 EOF
     exit 0
 }
@@ -199,7 +199,7 @@ modelname="$model"
 
 
 # Show script version
-#echo -e "$script $scriptver\ngithub.com/$repo\n"
+#echo -e "$script $scriptver\ngithub.com/$github_repo\n"
 echo "$script $scriptver"
 
 # Get DSM full version
@@ -257,8 +257,7 @@ syslog_set(){
 # Get latest release info
 # Curl timeout options:
 # https://unix.stackexchange.com/questions/94604/does-curl-have-a-timeout
-release=$(curl --silent -m 10 --connect-timeout 5 \
-    "https://api.github.com/repos/$repo/releases/latest")
+release=$(curl -L -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $github_authentication" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/$github_repo/releases/latest")
 
 # Release version
 tag=$(echo "$release" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
@@ -332,11 +331,11 @@ if ! printf "%s\n%s\n" "$tag" "$scriptver" |
     echo -e "Current version: ${scriptver}\nLatest version:  $tag"
     if [[ -f $scriptpath/$script-$shorttag.tar.gz ]]; then
         # They have the latest version tar.gz downloaded but are using older version
-        echo "https://github.com/$repo/releases/latest"
+        echo "https://github.com/$github_repo/releases/latest"
         sleep 10
     elif [[ -d $scriptpath/$script-$shorttag ]]; then
         # They have the latest version extracted but are using older version
-        echo "https://github.com/$repo/releases/latest"
+        echo "https://github.com/$github_repo/releases/latest"
         sleep 10
     else
         if [[ $autoupdate == "yes" ]]; then
@@ -356,7 +355,7 @@ if ! printf "%s\n%s\n" "$tag" "$scriptver" |
             cleanup_tmp
 
             if cd /tmp; then
-                url="https://github.com/$repo/archive/refs/tags/$tag.tar.gz"
+                url="https://github.com/$github_repo/archive/refs/tags/$tag.tar.gz"
                 if ! curl -JLO -m 30 --connect-timeout 5 "$url"; then
                     echo -e "${Error}ERROR${Off} Failed to download"\
                         "$script-$shorttag.tar.gz!"
@@ -1309,7 +1308,7 @@ fi
 install_binfile(){ 
     # install_binfile <file> <file-url> <destination> <chmod> <bundled-path> <hash>
     # example:
-    #  file_url="https://raw.githubusercontent.com/${repo}/main/bin/dtc"
+    #  file_url="https://raw.githubusercontent.com/${github_repo}/main/bin/dtc"
     #  install_binfile dtc "$file_url" /usr/bin/bc a+x bin/dtc
 
     if [[ -f "${scriptpath}/$5" ]]; then
@@ -1364,7 +1363,7 @@ edit_modeldtb(){
         if [[ ! -x $(which dtc) ]]; then
             md5hash="01381dabbe86e13a2f4a8017b5552918"
             branch="main"
-            file_url="https://raw.githubusercontent.com/${repo}/${branch}/bin/dtc"
+            file_url="https://raw.githubusercontent.com/${github_repo}/${branch}/bin/dtc"
             # install_binfile <file> <file-url> <destination> <chmod> <bundled-path> <hash>
             install_binfile dtc "$file_url" /usr/sbin/dtc "a+x" bin/dtc "$md5hash"
         fi
